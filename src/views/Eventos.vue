@@ -75,11 +75,7 @@
                       <v-date-picker v-model="dataFinal" no-title scrollable>
                         <v-spacer></v-spacer>
                         <v-btn text color="primary" @click="menuDataFinal = false">Cancel</v-btn>
-                        <v-btn
-                          text
-                          color="primary"
-                          @click="$refs.menuDataFinal.save(dataFinal)"
-                        >OK</v-btn>
+                        <v-btn text color="primary" @click="$refs.menuDataFinal.save(dataFinal)">OK</v-btn>
                       </v-date-picker>
                     </v-menu>
                   </v-col>
@@ -95,6 +91,17 @@
               <v-spacer></v-spacer>
               <v-btn color="blue darken-1" text @click="close">Cancelar</v-btn>
               <v-btn color="blue darken-1" text @click="save">Salvar</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+        <v-dialog v-model="dialogExcluir" max-width="430px">
+          <v-card>
+            <v-card-title class="headline">Deseja mesmo remover este Item?</v-card-title>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="blue darken-1" text @click="closeExcluir">Cancelar</v-btn>
+              <v-btn color="blue darken-1" text @click="deleteItemComfirm">Sim</v-btn>
+              <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -119,21 +126,22 @@ const textos = {
   titulo: "Eventos",
   novo: "Novo Evento",
   edicao: "Edição de Evento",
-  exclusao: "Deseja mesmo remover este Evento?"
+  exclusao: "Deseja mesmo remover este Evento?",
 };
 
 export default {
   name: "Eventos",
   components: {},
 
-  data: vm => ({
+  data: (vm) => ({
     dialog: false,
+    dialogExcluir: false,
     headers: [
       { text: "ID", value: "id" },
       { text: "Título", align: "start", value: "titulo" },
       { text: "Data de início", align: "center", value: "inicio" },
       { text: "Data de término", align: "center", value: "fim" },
-      { text: "Ações", align: "end", value: "actions", sortable: false }
+      { text: "Ações", align: "end", value: "actions", sortable: false },
     ],
 
     dataInicial: new Date().toISOString(),
@@ -148,7 +156,7 @@ export default {
     eventos: [],
     editedIndex: -1,
     editedItem: {},
-    defaultItem: {}
+    defaultItem: {},
   }),
 
   computed: {
@@ -158,12 +166,15 @@ export default {
 
     viewTitle() {
       return textos.titulo;
-    }
+    },
   },
 
   watch: {
     dialog(val) {
       val || this.close();
+    },
+    dialogExcluir(val) {
+      val || this.closeExcluir();
     },
 
     dataInicial() {
@@ -174,7 +185,7 @@ export default {
     dataFinal() {
       // this.dataFinalFormatted = this.formatDate(this.dataFinal);
       this.editedItem.fim = `${this.dataFinal} 00:00`;
-    }
+    },
   },
 
   created() {
@@ -214,10 +225,24 @@ export default {
     },
 
     deleteItem(item) {
-      const index = this.eventos.indexOf(item);
-      if (confirm(textos.exclusao)) {
-        service.destroy(item).then(this.eventos.splice(index, 1));
-      }
+      this.editedIndex = this.eventos.indexOf(item);
+      this.editedItem = Object.assign({}, item);
+      this.dialogExcluir = true;
+    },
+
+    deleteItemComfirm() {
+      service
+        .destroy(this.editedItem)
+        .then(this.eventos.splice(this.editedIndex, 1));
+      this.closeExcluir();
+    },
+
+    closeExcluir() {
+      this.dialogExcluir = false;
+      this.$nextTick(() => {
+        this.editedItem = Object.assign({}, this.defaultItem);
+        this.editedIndex = -1;
+      });
     },
 
     close() {
@@ -236,10 +261,10 @@ export default {
       } else {
         service
           .create(this.editedItem)
-          .then(response => this.eventos.push(response));
+          .then((response) => this.eventos.push(response));
       }
       this.close();
-    }
-  }
+    },
+  },
 };
 </script>

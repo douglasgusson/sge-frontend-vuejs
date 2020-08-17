@@ -49,6 +49,17 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
+        <v-dialog v-model="dialogExcluir" max-width="430px">
+          <v-card>
+            <v-card-title class="headline">Deseja mesmo remover este Item?</v-card-title>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="blue darken-1" text @click="closeExcluir">Cancelar</v-btn>
+              <v-btn color="blue darken-1" text @click="deleteItemComfirm">Sim</v-btn>
+              <v-spacer></v-spacer>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
       </v-toolbar>
     </template>
 
@@ -69,7 +80,7 @@ const service = OrganizadorService.build();
 const textos = {
   novo: "Novo Organizador",
   edicao: "Edição de Organizador",
-  exclusao: "Deseja mesmo remover este Organizador?"
+  exclusao: "Deseja mesmo remover este Organizador?",
 };
 
 export default {
@@ -78,29 +89,33 @@ export default {
 
   data: () => ({
     dialog: false,
+    dialogExcluir: false,
     headers: [
       { text: "ID", value: "id" },
       { text: "Nome", align: "start", value: "nome" },
       { text: "CPF", align: "center", value: "cpf" },
-      { text: "Ações", align: "end", value: "actions", sortable: false }
+      { text: "Ações", align: "end", value: "actions", sortable: false },
     ],
     mostraSenha: false,
     organizadores: [],
     editedIndex: -1,
     editedItem: {},
-    defaultItem: {}
+    defaultItem: {},
   }),
 
   computed: {
     formTitle() {
       return this.editedIndex === -1 ? textos.novo : textos.edicao;
-    }
+    },
   },
 
   watch: {
     dialog(val) {
       val || this.close();
-    }
+    },
+    dialogExcluir(val) {
+      val || this.closeExcluir();
+    },
   },
 
   created() {
@@ -131,10 +146,24 @@ export default {
     },
 
     deleteItem(item) {
-      const index = this.organizadores.indexOf(item);
-      if (confirm(textos.exclusao)) {
-        service.destroy(item).then(this.organizadores.splice(index, 1));
-      }
+      this.editedIndex = this.organizadores.indexOf(item);
+      this.editedItem = Object.assign({}, item);
+      this.dialogExcluir = true;
+    },
+
+    deleteItemComfirm() {
+      service
+        .destroy(this.editedItem)
+        .then(this.organizadores.splice(this.editedIndex, 1));
+      this.closeExcluir();
+    },
+
+    closeExcluir() {
+      this.dialogExcluir = false;
+      this.$nextTick(() => {
+        this.editedItem = Object.assign({}, this.defaultItem);
+        this.editedIndex = -1;
+      });
     },
 
     close() {
@@ -156,10 +185,10 @@ export default {
       } else {
         service
           .create(this.editedItem)
-          .then(response => this.organizadores.push(response));
+          .then((response) => this.organizadores.push(response));
       }
       this.close();
-    }
-  }
+    },
+  },
 };
 </script>
