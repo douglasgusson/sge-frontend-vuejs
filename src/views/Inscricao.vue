@@ -75,6 +75,33 @@
       <v-icon small class="mr-2" @click="editItem(item)">mdi-pencil</v-icon>
       <v-icon small @click="deleteItem(item)">mdi-delete</v-icon>
     </template>
+
+    <template v-slot:body.append>
+      <tr>
+        <td></td>
+        <td>
+          <v-combobox
+            v-model="filtroEvento"
+            item-text="titulo"
+            @change="filtrarAtividades"
+            :items="eventos"
+            label="Evento"
+            clearable
+          ></v-combobox>
+        </td>
+        <td>
+          <v-combobox
+            v-model="filtroAtividade"
+            item-text="titulo"
+            :items="atividadesFiltradas"
+            label="Atividade"
+            clearable
+          ></v-combobox>
+        </td>
+        <td></td>
+      </tr>
+    </template>
+
     <template v-slot:no-data>
       <v-btn color="primary" @click="initialize">Recarregar</v-btn>
     </template>
@@ -106,13 +133,6 @@ export default {
   data() {
     return {
       dialog: false,
-      headers: [
-        { text: "Participante", align: "start", value: "participante.nome" },
-        { text: "Atividade", align: "center", value: "atividade.titulo" },
-        { text: "Evento", align: "center", value: "atividade.evento.titulo" },
-        { text: "Ações", align: "end", value: "actions", sortable: false },
-      ],
-
       inscricoes: [],
       atividades: [],
       atividadesFiltradas: [],
@@ -124,6 +144,9 @@ export default {
         show: false,
         message: "",
       },
+
+      filtroEvento: null,
+      filtroAtividade: null,
 
       editedIndex: -1,
       editedItem: {},
@@ -138,6 +161,31 @@ export default {
 
     viewTitle() {
       return textos.titulo;
+    },
+
+    headers() {
+      return [
+        { text: "Participante", align: "start", value: "participante.nome" },
+        {
+          text: "Evento",
+          align: "center",
+          value: "atividade.evento.titulo",
+          filter: (value) => {
+            if (!this.filtroEvento) return true;
+            return value == this.filtroEvento.titulo;
+          },
+        },
+        {
+          text: "Atividade",
+          align: "center",
+          value: "atividade.titulo",
+          filter: (value) => {
+            if (!this.filtroAtividade) return true;
+            return value == this.filtroAtividade.titulo;
+          },
+        },
+        { text: "Ações", align: "end", value: "actions", sortable: false },
+      ];
     },
   },
 
@@ -195,11 +243,11 @@ export default {
       this.atividades = [];
     },
 
-    filtrarAtividades() {
-      const filtro = ((atividade) =>
-        atividade.evento.id == this.evento.id).bind(this);
-      this.editedItem.atividade = null;
+    filtrarAtividades(evento) {
+      const filtro = (atividade) =>
+        evento ? atividade.evento.id == evento.id : false;
       this.atividadesFiltradas = this.atividades.filter(filtro);
+      this.editedItem.atividade = null;
     },
 
     fetchRecordsInscricoes() {
@@ -215,9 +263,17 @@ export default {
     },
 
     editItem(item) {
+      this.limparFiltros();
       this.editedIndex = this.eventos.indexOf(item);
       this.editedItem = Object.assign({}, item);
       this.dialog = true;
+    },
+
+    limparFiltros() {
+      this.filtroEvento = null;
+      this.filtroAtividade = null;
+      this.evento = null;
+      this.atividadesFiltradas = [];
     },
 
     deleteItem(item) {

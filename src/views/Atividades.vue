@@ -185,7 +185,10 @@
         </v-dialog>
         <v-dialog v-model="dialogExcluir" max-width="430px">
           <v-card>
-            <v-card-title class="headline">Deseja mesmo remover este Item?</v-card-title>
+            <v-card-title class="headline">{{ textoExclusao.questao }}</v-card-title>
+            <v-card-text class="text--primary">
+              <div>{{ textoExclusao.info }}</div>
+            </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
               <v-btn color="blue darken-1" text @click="closeExcluir">Cancelar</v-btn>
@@ -201,6 +204,17 @@
       <v-icon color="blue" small class="mr-2" @click="editItem(item)">mdi-pencil</v-icon>
       <v-icon color="red" small @click="deleteItem(item)">mdi-delete</v-icon>
     </template>
+
+    <template v-slot:body.append>
+      <tr>
+        <td colspan="3"></td>
+        <td>
+          <v-select v-model="filtro" item-text="nome" :items="locais" label="Local" clearable></v-select>
+        </td>
+        <td colspan="5"></td>
+      </tr>
+    </template>
+
     <template v-slot:no-data>
       <v-btn color="primary" @click="initialize">Recarregar</v-btn>
     </template>
@@ -233,17 +247,6 @@ export default {
   data: (vm) => ({
     dialog: false,
     dialogExcluir: false,
-    headers: [
-      { text: "ID", value: "id" },
-      { text: "Título", align: "start", value: "titulo" },
-      { text: "Tipo", align: "center", value: "tipoAtividade.descricao" },
-      { text: "Data de início", align: "center", value: "dataInicio" },
-      { text: "Horário de início", align: "center", value: "horarioInicio" },
-      { text: "Data de término", align: "center", value: "dataFim" },
-      { text: "Horário de término", align: "center", value: "horarioFim" },
-      { text: "Ações", align: "end", value: "actions", sortable: false },
-    ],
-
     dataInicial: new Date().toISOString().substr(0, 10),
     dataFinal: new Date().toISOString().substr(0, 10),
 
@@ -264,11 +267,42 @@ export default {
     editedIndex: -1,
     editedItem: {},
     defaultItem: {},
+
+    filtro: null,
   }),
 
   computed: {
     formTitle() {
       return this.editedIndex === -1 ? textos.novo : textos.edicao;
+    },
+
+    textoExclusao() {
+      return {
+        questao: textos.exclusao,
+        info: `#${this.editedItem.id} - ${this.editedItem.titulo}`,
+      };
+    },
+
+    headers() {
+      return [
+        { text: "ID", value: "id" },
+        { text: "Título", align: "start", value: "titulo" },
+        { text: "Tipo", align: "center", value: "tipoAtividade.descricao" },
+        {
+          text: "Local",
+          align: "center",
+          value: "local.nome",
+          filter: (value) => {
+            if (!this.filtro) return true;
+            return value == this.filtro;
+          },
+        },
+        { text: "Data de início", align: "center", value: "dataInicio" },
+        { text: "Horário de início", align: "center", value: "horarioInicio" },
+        { text: "Data de término", align: "center", value: "dataFim" },
+        { text: "Horário de término", align: "center", value: "horarioFim" },
+        { text: "Ações", align: "end", value: "actions", sortable: false },
+      ];
     },
   },
 

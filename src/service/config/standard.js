@@ -1,5 +1,7 @@
 import axios from 'axios'
 
+const production = true;
+
 const standard = axios.create({
     baseURL: getBaseUrl(),
     timeout: 100000,
@@ -12,10 +14,10 @@ const standard = axios.create({
 
 
 function getBaseUrl() {
-    if (process.env.NODE_ENV == process.env.NODE_ENV) {
-        return 'http://127.0.0.1:8080/';
+    if (production) {
+        return 'https://sge-backend-spring.herokuapp.com';
     } else {
-        return 'https://sge-backend.heroku.aap/';
+        return 'http://127.0.0.1:8080/';
     }
 }
 
