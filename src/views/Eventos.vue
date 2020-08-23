@@ -27,29 +27,27 @@
                       ref="menuDataInicial"
                       v-model="menuDataInicial"
                       :close-on-content-click="false"
-                      :return-value.sync="dataInicial"
                       transition="scale-transition"
                       offset-y
+                      max-width="290px"
                       min-width="290px"
                     >
                       <template v-slot:activator="{ on, attrs }">
                         <v-text-field
-                          v-model="dataInicial"
-                          label="Data inicial"
-                          readonly
+                          v-model="dataInicialFormatted"
+                          label="Date"
+                          hint="DD/MM/AAAA"
+                          persistent-hint
                           v-bind="attrs"
+                          @blur="editedItem.dataInicio = dataInicialFormatted"
                           v-on="on"
                         ></v-text-field>
                       </template>
-                      <v-date-picker v-model="dataInicial" no-title scrollable>
-                        <v-spacer></v-spacer>
-                        <v-btn text color="primary" @click="menuDataInicial = false">Cancel</v-btn>
-                        <v-btn
-                          text
-                          color="primary"
-                          @click="$refs.menuDataInicial.save(dataInicial)"
-                        >OK</v-btn>
-                      </v-date-picker>
+                      <v-date-picker
+                        v-model="dataInicial"
+                        no-title
+                        @input="menuDataInicial = false"
+                      ></v-date-picker>
                     </v-menu>
                   </v-col>
 
@@ -58,25 +56,23 @@
                       ref="menuDataFinal"
                       v-model="menuDataFinal"
                       :close-on-content-click="false"
-                      :return-value.sync="dataFinal"
                       transition="scale-transition"
                       offset-y
+                      max-width="290px"
                       min-width="290px"
                     >
                       <template v-slot:activator="{ on, attrs }">
                         <v-text-field
-                          v-model="dataFinal"
-                          label="Data final"
-                          readonly
+                          v-model="dataFinalFormatted"
+                          label="Date"
+                          hint="DD/MM/AAAA"
+                          persistent-hint
                           v-bind="attrs"
+                          @blur="editedItem.dataFim = dataFinalFormatted"
                           v-on="on"
                         ></v-text-field>
                       </template>
-                      <v-date-picker v-model="dataFinal" no-title scrollable>
-                        <v-spacer></v-spacer>
-                        <v-btn text color="primary" @click="menuDataFinal = false">Cancel</v-btn>
-                        <v-btn text color="primary" @click="$refs.menuDataFinal.save(dataFinal)">OK</v-btn>
-                      </v-date-picker>
+                      <v-date-picker v-model="dataFinal" no-title @input="menuDataFinal = false"></v-date-picker>
                     </v-menu>
                   </v-col>
 
@@ -139,12 +135,12 @@ export default {
     headers: [
       { text: "ID", value: "id" },
       { text: "Título", align: "start", value: "titulo" },
-      { text: "Data de início", align: "center", value: "inicio" },
-      { text: "Data de término", align: "center", value: "fim" },
+      { text: "Data de início", align: "center", value: "dataInicio" },
+      { text: "Data de término", align: "center", value: "dataFim" },
       { text: "Ações", align: "end", value: "actions", sortable: false },
     ],
 
-    dataInicial: new Date().toISOString(),
+    dataInicial: new Date().toISOString().substr(0, 10),
     dataFinal: new Date().toISOString().substr(0, 10),
 
     dataInicialFormatted: vm.formatDate(new Date().toISOString().substr(0, 10)),
@@ -178,13 +174,13 @@ export default {
     },
 
     dataInicial() {
-      // this.dataInicialFormatted = this.formatDate(this.dataInicial);
-      this.editedItem.inicio = `${this.dataInicial} 00:00`;
+      this.dataInicialFormatted = this.formatDate(this.dataInicial);
+      this.editedItem.dataInicio = this.dataInicialFormatted;
     },
 
     dataFinal() {
-      // this.dataFinalFormatted = this.formatDate(this.dataFinal);
-      this.editedItem.fim = `${this.dataFinal} 00:00`;
+      this.dataFinalFormatted = this.formatDate(this.dataFinal);
+      this.editedItem.dataFim = this.dataFinalFormatted;
     },
   },
 
@@ -212,10 +208,13 @@ export default {
     },
 
     parseDate(date) {
-      console.log(date);
-      if (!date) return null;
-      const [month, day, year] = date.split("/");
-      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+      try {
+        const [month, day, year] = date.split("/");
+        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+      } catch (error) {
+        console.log(error);
+      }
+      return null;
     },
 
     editItem(item) {
