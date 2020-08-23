@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const standard = axios.create({
-    baseURL: 'http://127.0.0.1:8080/',
+    baseURL: getBaseUrl(),
     timeout: 100000,
     transformResponse: [
         function (data) {
@@ -9,5 +9,14 @@ const standard = axios.create({
         }
     ]
 })
+
+
+function getBaseUrl() {
+    if (process.env.NODE_ENV == process.env.NODE_ENV) {
+        return 'http://127.0.0.1:8080/';
+    } else {
+        return 'https://sge-backend.heroku.aap/';
+    }
+}
 
 export default standard

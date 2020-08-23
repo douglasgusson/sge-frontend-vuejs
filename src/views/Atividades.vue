@@ -6,7 +6,7 @@
         <v-divider class="mx-4" inset vertical></v-divider>
         <v-spacer></v-spacer>
 
-        <v-dialog v-model="dialog" max-width="800px">
+        <v-dialog v-model="dialog" max-width="960px">
           <template v-slot:activator="{ on, attrs }">
             <v-btn color="success" dark class="mb-2" v-bind="attrs" v-on="on">Novo</v-btn>
           </template>
@@ -30,62 +30,114 @@
                   <v-col cols="12" sm="8">
                     <v-text-field v-model="editedItem.titulo" label="Título"></v-text-field>
                   </v-col>
-
-                  <v-col cols="12" sm="6">
+                  <v-col cols="12" sm="4">
                     <v-menu
                       ref="menuDataInicial"
                       v-model="menuDataInicial"
                       :close-on-content-click="false"
-                      :return-value.sync="dataInicial"
                       transition="scale-transition"
                       offset-y
+                      max-width="290px"
                       min-width="290px"
                     >
                       <template v-slot:activator="{ on, attrs }">
                         <v-text-field
-                          v-model="dataInicial"
-                          label="Data inicial"
-                          readonly
+                          v-model="dataInicialFormatted"
+                          label="Data de início"
+                          persistent-hint
                           v-bind="attrs"
+                          @blur="editedItem.dataInicio = dataInicialFormatted"
                           v-on="on"
                         ></v-text-field>
                       </template>
-                      <v-date-picker v-model="dataInicial" no-title scrollable>
-                        <v-spacer></v-spacer>
-                        <v-btn text color="primary" @click="menuDataInicial = false">Cancel</v-btn>
-                        <v-btn
-                          text
-                          color="primary"
-                          @click="$refs.menuDataInicial.save(dataInicial)"
-                        >OK</v-btn>
-                      </v-date-picker>
+                      <v-date-picker
+                        v-model="dataInicial"
+                        no-title
+                        @input="menuDataInicial = false"
+                      ></v-date-picker>
+                    </v-menu>
+                  </v-col>
+                  <v-col cols="12" sm="2">
+                    <v-menu
+                      ref="menuHorarioInicio"
+                      v-model="menuHorarioInicio"
+                      :close-on-content-click="false"
+                      :nudge-right="40"
+                      :return-value.sync="editedItem.horarioInicio"
+                      transition="scale-transition"
+                      offset-y
+                      max-width="290px"
+                      min-width="290px"
+                    >
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-text-field
+                          v-model="editedItem.horarioInicio"
+                          label="Horário de início"
+                          v-bind="attrs"
+                          readonly
+                          v-on="on"
+                        ></v-text-field>
+                      </template>
+                      <v-time-picker
+                        v-if="menuHorarioInicio"
+                        v-model="editedItem.horarioInicio"
+                        full-width
+                        @click:minute="$refs.menuHorarioInicio.save(editedItem.horarioInicio)"
+                      ></v-time-picker>
                     </v-menu>
                   </v-col>
 
-                  <v-col cols="12" sm="6">
+                  <v-col cols="12" sm="4">
                     <v-menu
                       ref="menuDataFinal"
                       v-model="menuDataFinal"
                       :close-on-content-click="false"
-                      :return-value.sync="dataFinal"
                       transition="scale-transition"
                       offset-y
+                      max-width="290px"
                       min-width="290px"
                     >
                       <template v-slot:activator="{ on, attrs }">
                         <v-text-field
-                          v-model="dataFinal"
-                          label="Data final"
-                          readonly
+                          v-model="dataFinalFormatted"
+                          label="Data de término"
+                          persistent-hint
                           v-bind="attrs"
+                          @blur="editedItem.dataFim = dataFinalFormatted"
                           v-on="on"
                         ></v-text-field>
                       </template>
-                      <v-date-picker v-model="dataFinal" no-title scrollable>
-                        <v-spacer></v-spacer>
-                        <v-btn text color="primary" @click="menuDataFinal = false">Cancel</v-btn>
-                        <v-btn text color="primary" @click="$refs.menuDataFinal.save(dataFinal)">OK</v-btn>
-                      </v-date-picker>
+                      <v-date-picker v-model="dataFinal" no-title @input="menuDataFinal = false"></v-date-picker>
+                    </v-menu>
+                  </v-col>
+
+                  <v-col cols="12" sm="2">
+                    <v-menu
+                      ref="menuHorarioFim"
+                      v-model="menuHorarioFim"
+                      :close-on-content-click="false"
+                      :nudge-right="40"
+                      :return-value.sync="editedItem.horarioFim"
+                      transition="scale-transition"
+                      offset-y
+                      max-width="290px"
+                      min-width="290px"
+                    >
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-text-field
+                          v-model="editedItem.horarioFim"
+                          label="Horário de início"
+                          v-bind="attrs"
+                          readonly
+                          v-on="on"
+                        ></v-text-field>
+                      </template>
+                      <v-time-picker
+                        v-if="menuHorarioFim"
+                        v-model="editedItem.horarioFim"
+                        full-width
+                        @click:minute="$refs.menuHorarioFim.save(editedItem.horarioFim)"
+                      ></v-time-picker>
                     </v-menu>
                   </v-col>
 
@@ -160,23 +212,24 @@ const atividadeService = AtividadeService.build();
 const textos = {
   novo: "Nova Atividade",
   edicao: "Edição de Atividade",
-  exclusao: "Deseja mesmo remover esta Atividade?"
+  exclusao: "Deseja mesmo remover esta Atividade?",
 };
 
 export default {
   name: "Atividades",
   components: {},
 
-  data: vm => ({
+  data: (vm) => ({
     dialog: false,
     headers: [
       { text: "ID", value: "id" },
       { text: "Título", align: "start", value: "titulo" },
       { text: "Tipo", align: "center", value: "tipoAtividade.descricao" },
-      { text: "Descrição", align: "center", value: "descricao" },
-      { text: "Data/Hora de início", align: "center", value: "inicio" },
-      { text: "Data/Hora de término", align: "center", value: "fim" },
-      { text: "Ações", align: "end", value: "actions", sortable: false }
+      { text: "Data de início", align: "center", value: "dataInicio" },
+      { text: "Horário de início", align: "center", value: "horarioInicio" },
+      { text: "Data de término", align: "center", value: "dataFim" },
+      { text: "Horário de término", align: "center", value: "horarioFim" },
+      { text: "Ações", align: "end", value: "actions", sortable: false },
     ],
 
     dataInicial: new Date().toISOString().substr(0, 10),
@@ -186,7 +239,9 @@ export default {
     dataFinalFormatted: vm.formatDate(new Date().toISOString().substr(0, 10)),
 
     menuDataInicial: false,
+    menuHorarioInicio: false,
     menuDataFinal: false,
+    menuHorarioFim: false,
 
     atividades: [],
     locais: [],
@@ -196,13 +251,13 @@ export default {
 
     editedIndex: -1,
     editedItem: {},
-    defaultItem: {}
+    defaultItem: {},
   }),
 
   computed: {
     formTitle() {
       return this.editedIndex === -1 ? textos.novo : textos.edicao;
-    }
+    },
   },
 
   watch: {
@@ -210,19 +265,15 @@ export default {
       val || this.close();
     },
 
-    horarioInicial() {
-      this.editedItem.horarioInicial = this.horarioInicial;
-    },
-
     dataInicial() {
-      // this.dataInicialFormatted = this.formatDate(this.dataInicial);
-      this.editedItem.inicio = this.dataInicial;
+      this.dataInicialFormatted = this.formatDate(this.dataInicial);
+      this.editedItem.dataInicio = this.dataInicialFormatted;
     },
 
     dataFinal() {
-      // this.dataFinalFormatted = this.formatDate(this.dataFinal);
-      this.editedItem.fim = this.dataFinal;
-    }
+      this.dataFinalFormatted = this.formatDate(this.dataFinal);
+      this.editedItem.dataFim = this.dataFinalFormatted;
+    },
   },
 
   created() {
@@ -342,10 +393,10 @@ export default {
       } else {
         atividadeService
           .create(this.editedItem)
-          .then(response => this.atividades.push(response));
+          .then((response) => this.atividades.push(response));
       }
       this.close();
-    }
-  }
+    },
+  },
 };
 </script>

@@ -93,6 +93,14 @@ const routes = [
     }
   },
   {
+    path: '/certificado/:id',
+    name: 'Certificado',
+    component: () => import(/* webpackChunkName: "certificado" */ '../views/Certificado.vue'),
+    meta: {
+      guest: true
+    }
+  },
+  {
     path: '/sobre',
     name: 'Sobre',
     component: About,
