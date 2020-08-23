@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const production = false;
+const production = true;
 
 const standard = axios.create({
     baseURL: getBaseUrl(),
